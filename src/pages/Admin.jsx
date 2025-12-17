@@ -1,0 +1,128 @@
+import { useState } from 'react';
+import { useStore } from '../context/StoreContext';
+import { Link } from 'react-router-dom';
+import './Admin.css';
+
+function Admin() {
+    const { addProduct, products } = useStore();
+    const [newProduct, setNewProduct] = useState({
+        name: '',
+        price: '',
+        category: 'Clothing',
+        image: ''
+    });
+
+    const handleChange = (e) => {
+        setNewProduct({ ...newProduct, [e.target.name]: e.target.value });
+    };
+
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setNewProduct({ ...newProduct, image: reader.result });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!newProduct.name || !newProduct.price) return;
+
+        addProduct({
+            ...newProduct,
+            price: parseFloat(newProduct.price)
+        });
+
+        setNewProduct({
+            name: '',
+            price: '',
+            category: 'Clothing',
+            image: ''
+        });
+
+        alert('Product added successfully!');
+    };
+
+    return (
+        <div className="admin-container">
+            <nav className="admin-nav">
+                <Link to="/store" className="back-link">← Back to Store</Link>
+                <h1>Store Admin</h1>
+            </nav>
+
+            <div className="admin-content">
+                <div className="add-product-section">
+                    <h2>Add New Product</h2>
+                    <form onSubmit={handleSubmit} className="admin-form">
+                        <div className="form-group">
+                            <label>Product Name</label>
+                            <input
+                                type="text"
+                                name="name"
+                                value={newProduct.name}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Price (€)</label>
+                            <input
+                                type="number"
+                                name="price"
+                                value={newProduct.price}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Category</label>
+                            <select name="category" value={newProduct.category} onChange={handleChange}>
+                                <option value="Clothing">Clothing</option>
+                                <option value="Shoes">Shoes</option>
+                                <option value="Accessories">Accessories</option>
+                            </select>
+                        </div>
+
+                        <div className="form-group">
+                            <label>Product Image</label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                            />
+                            {newProduct.image && (
+                                <div className="image-preview">
+                                    <img src={newProduct.image} alt="Preview" />
+                                </div>
+                            )}
+                        </div>
+
+                        <button type="submit" className="add-btn">Add Product</button>
+                    </form>
+                </div>
+
+                <div className="product-list-section">
+                    <h2>Current Products</h2>
+                    <div className="admin-product-list">
+                        {products.map(product => (
+                            <div key={product.id} className="admin-product-item">
+                                <div className="admin-product-info">
+                                    <span className="name">{product.name}</span>
+                                    <span className="price">€{product.price.toFixed(2)}</span>
+                                    <span className="category">{product.category}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export default Admin;

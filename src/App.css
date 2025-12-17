@@ -1,0 +1,211 @@
+:root {
+  --left-bg-color: #0a0a0a;
+  --right-bg-color: #1a1a1a;
+  --accent-color: #2E7D32;
+  /* Dark Green */
+  --text-color: #ffffff;
+  --hover-width: 75%;
+  --other-width: 25%;
+  --transition-speed: 800ms;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #000;
+  color: var(--text-color);
+  /* overflow: hidden; Removed to allow scrolling on other pages */
+}
+
+.container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+  /* Moved here to keep landing page non-scrollable */
+}
+
+/* Logo */
+.logo-container {
+  position: absolute;
+  top: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  pointer-events: none;
+  /* Let clicks pass through */
+}
+
+.logo {
+  width: 80px;
+  /* Adjust size as needed */
+  height: auto;
+  opacity: 0.9;
+}
+
+/* Split Sections */
+.split {
+  position: relative;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  transition: width var(--transition-speed) ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.split.left {
+  background: url('/assets/fashion-store-bg.png') center center/cover no-repeat;
+}
+
+.split.right {
+  background: url('/assets/portfolio-bg.png') center center/cover no-repeat;
+}
+
+/* Overlay for better text readability */
+.split::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  transition: background-color var(--transition-speed) ease-in-out;
+  z-index: 1;
+}
+
+.split:hover::before {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Content */
+.content {
+  position: relative;
+  z-index: 2;
+  padding: 2rem;
+  max-width: 600px;
+  transition: transform var(--transition-speed) ease-in-out, opacity 0.4s ease-in-out;
+}
+
+.subtitle {
+  display: block;
+  font-size: 0.9rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  color: var(--accent-color);
+  font-weight: 700;
+}
+
+.title {
+  font-size: 5rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  line-height: 1;
+}
+
+.description {
+  font-size: 1.2rem;
+  margin-bottom: 2.5rem;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 1rem 2.5rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50px;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(5px);
+}
+
+.btn:hover {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  transform: translateY(-2px);
+}
+
+.arrow {
+  margin-left: 10px;
+  transition: transform 0.3s ease;
+}
+
+.btn:hover .arrow {
+  transform: translateX(5px);
+}
+
+/* Hover Effects for Split Screen */
+.container.hover-left .split.left {
+  width: var(--hover-width);
+}
+
+.container.hover-left .split.right {
+  width: var(--other-width);
+}
+
+.container.hover-right .split.right {
+  width: var(--hover-width);
+}
+
+.container.hover-right .split.left {
+  width: var(--other-width);
+}
+
+/* Footer */
+.footer {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  font-size: 0.8rem;
+  opacity: 0.6;
+  width: 100%;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .split {
+    width: 100% !important;
+    /* Override hover width changes */
+    height: 50%;
+  }
+
+  .title {
+    font-size: 3rem;
+  }
+
+  .logo-container {
+    top: 1rem;
+  }
+
+  .logo {
+    width: 60px;
+  }
+}
