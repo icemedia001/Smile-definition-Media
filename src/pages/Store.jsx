@@ -99,7 +99,6 @@ function Store() {
                     <a href="#">Returns</a>
                     <a href="#">Terms</a>
                     <a href="#">Privacy</a>
-                    <Link to="/admin" style={{ color: '#333' }}>Admin</Link>
                 </div>
             </footer>
         </div>
