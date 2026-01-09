@@ -1,160 +1,370 @@
 import { useState } from 'react';
 import { useStore } from '../context/StoreContext';
+import { useGallery } from '../context/GalleryContext';
 import { Link } from 'react-router-dom';
 import './Admin.css';
 
 function Admin() {
     const { addProduct, products } = useStore();
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const {
+        galleries,
+        createGallery,
+        addImagesToGallery,
+        deleteGallery,
+        uploadEditedImage,
+        updateGallery,
+        addFavoriteList
+    } = useGallery();
+
+    const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem('adminAuth') === 'true');
     const [password, setPassword] = useState('');
-    const [newProduct, setNewProduct] = useState({
-        name: '',
-        price: '',
-        category: 'Clothing',
-        image: ''
-    });
+    const [activeView, setActiveView] = useState('galleries');
+    const [selectedGallery, setSelectedGallery] = useState(null);
+    const [activeTab, setActiveTab] = useState('photos');
+
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [newClientName, setNewClientName] = useState('');
+    const [newClientEmail, setNewClientEmail] = useState('');
+    const [createdClientCreds, setCreatedClientCreds] = useState(null);
+
+    const [newListData, setNewListData] = useState({ name: '', limit: 50 });
+
+    const [isUploading, setIsUploading] = useState(false);
 
     const handleLogin = (e) => {
         e.preventDefault();
-        // Simple client-side check. In a real app, this should be backend validated.
-        if (password === 'smile123') {
+        if (password === import.meta.env.VITE_ADMIN_PASSWORD) {
             setIsAuthenticated(true);
+            localStorage.setItem('adminAuth', 'true');
         } else {
             alert('Incorrect password');
         }
     };
 
+    const handleCreateGallery = async (e) => {
+        e.preventDefault();
+        try {
+            const { password } = await createGallery(newClientName, newClientEmail);
+            setCreatedClientCreds({ email: newClientEmail, password });
+            setNewClientName('');
+            setNewClientEmail('');
+        } catch (error) {
+            alert('Error creating gallery');
+        }
+    };
+
+    const handleImageUpload = async (e, galleryId) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+
+        setIsUploading(true);
+        try {
+            await addImagesToGallery(galleryId, files);
+            alert('Images uploaded successfully!');
+        } catch (error) {
+            alert('Failed to upload images.');
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleSetCover = async (galleryId, imageUrl) => {
+        try {
+            await updateGallery(galleryId, { coverPhotoUrl: imageUrl });
+            alert('Cover photo updated!');
+        } catch (error) {
+            alert('Failed to update cover photo');
+        }
+    };
+
+    const handleCreateList = async (e) => {
+        e.preventDefault();
+        if (!selectedGallery) return;
+        try {
+            await addFavoriteList(selectedGallery.id, newListData.name, newListData.limit);
+            setNewListData({ name: '', limit: 50 });
+            alert('List created!');
+        } catch (error) {
+            alert('Failed to create list');
+        }
+    };
+
     if (!isAuthenticated) {
         return (
-            <div className="admin-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-                <form onSubmit={handleLogin} className="admin-form" style={{ maxWidth: '400px', width: '100%' }}>
-                    <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>Admin Access</h2>
-                    <div className="form-group">
-                        <label>Password</label>
+            <div className="admin-login">
+                <div className="login-box">
+                    <form onSubmit={handleLogin}>
+                        <h2>Admin Access</h2>
                         <input
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter admin password"
+                            placeholder="Enter password"
                         />
-                    </div>
-                    <button type="submit" className="add-btn">Login</button>
-                    <Link to="/store" className="back-link" style={{ display: 'block', textAlign: 'center', marginTop: '1rem' }}>← Back to Store</Link>
-                </form>
+                        <button type="submit">Login</button>
+                    </form>
+                </div>
             </div>
         );
     }
 
-    const handleChange = (e) => {
-        setNewProduct({ ...newProduct, [e.target.name]: e.target.value });
-    };
+    if (selectedGallery) {
+        const gallery = galleries.find(g => g.id === selectedGallery.id) || selectedGallery;
 
-    const handleImageUpload = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setNewProduct({ ...newProduct, image: reader.result });
-            };
-            reader.readAsDataURL(file);
-        }
-    };
+        return (
+            <div className="admin-container">
+                <Sidebar activeView={activeView} setActiveView={(view) => { setActiveView(view); setSelectedGallery(null); }} />
+                <main className="admin-main">
+                    <div className="detail-header">
+                        <div>
+                            <button onClick={() => setSelectedGallery(null)} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', marginBottom: '1rem' }}>← Back to Galleries</button>
+                            <h1 className="page-title">{gallery.clientName}</h1>
+                            <p style={{ color: '#888', marginTop: '0.5rem' }}>{gallery.clientEmail}</p>
+                            <div style={{ marginTop: '1rem', background: '#f5f5f5', padding: '0.5rem 1rem', borderRadius: '4px', display: 'inline-block' }}>
+                                <span style={{ fontSize: '0.9rem', color: '#666' }}>Password: </span>
+                                <code style={{ fontWeight: 'bold' }}>{gallery.password}</code>
+                            </div>
+                        </div>
+                        <div style={{ width: '200px', height: '150px', background: '#f0f0f0', borderRadius: '8px', overflow: 'hidden', position: 'relative' }}>
+                            {gallery.coverPhotoUrl ? (
+                                <img src={gallery.coverPhotoUrl} alt="Cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#999', fontSize: '0.8rem' }}>No Cover Photo</div>
+                            )}
+                            <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', background: 'rgba(0,0,0,0.5)', color: 'white', fontSize: '0.7rem', padding: '0.3rem', textAlign: 'center' }}>Current Cover</div>
+                        </div>
+                    </div>
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!newProduct.name || !newProduct.price) return;
+                    <div className="detail-tabs">
+                        <button className={`tab ${activeTab === 'photos' ? 'active' : ''}`} onClick={() => setActiveTab('photos')}>Photos ({gallery.images?.length || 0})</button>
+                        <button className={`tab ${activeTab === 'lists' ? 'active' : ''}`} onClick={() => setActiveTab('lists')}>Lists & Limits</button>
+                        <button className={`tab ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>Settings</button>
+                    </div>
 
-        addProduct({
-            ...newProduct,
-            price: parseFloat(newProduct.price)
-        });
+                    {activeTab === 'photos' && (
+                        <div>
+                            <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
+                                <input
+                                    type="file"
+                                    id="upload-photos"
+                                    multiple
+                                    accept="image/*"
+                                    style={{ display: 'none' }}
+                                    onChange={(e) => handleImageUpload(e, gallery.id)}
+                                />
+                                <label htmlFor="upload-photos" className="primary-btn">
+                                    {isUploading ? 'Uploading...' : '+ Upload Photos'}
+                                </label>
+                            </div>
 
-        setNewProduct({
-            name: '',
-            price: '',
-            category: 'Clothing',
-            image: ''
-        });
+                            <div className="admin-gallery-grid">
+                                {gallery.images?.map(img => (
+                                    <div key={img.id} className="admin-img-card">
+                                        <img src={img.url} alt="gallery" />
+                                        <div className="img-actions">
+                                            <button className="action-btn" onClick={() => handleSetCover(gallery.id, img.url)}>Set Cover</button>
+                                            {/* Add more actions like Delete or Edit here */}
+                                        </div>
+                                        {img.selected && <div className="selection-badge">Selected</div>}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
-        alert('Product added successfully!');
-    };
+                    {activeTab === 'lists' && (
+                        <div>
+                            <div className="create-section" style={{ maxWidth: '500px', marginBottom: '3rem' }}>
+                                <h3>Create Selection List</h3>
+                                <form onSubmit={handleCreateList} className="create-form">
+                                    <div className="form-group">
+                                        <input
+                                            type="text"
+                                            placeholder="List Name (e.g. Album Selection)"
+                                            value={newListData.name}
+                                            onChange={(e) => setNewListData({ ...newListData, name: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <input
+                                            type="number"
+                                            placeholder="Limit (e.g. 50)"
+                                            value={newListData.limit}
+                                            onChange={(e) => setNewListData({ ...newListData, limit: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <button type="submit" className="create-btn">Create List</button>
+                                </form>
+                            </div>
+
+                            <h3>Active Lists</h3>
+                            {gallery.favoriteLists?.length > 0 ? (
+                                <div>
+                                    {gallery.favoriteLists.map((list, index) => (
+                                        <div key={index} className="list-item">
+                                            <div>
+                                                <h4>{list.name}</h4>
+                                                <p style={{ fontSize: '0.9rem', color: '#666' }}>Limit: {list.limit} photos</p>
+                                            </div>
+                                            <div>
+                                                <div className="progress-bar">
+                                                    <div
+                                                        className="progress-fill"
+                                                        style={{ width: `${(list.selections?.length || 0) / list.limit * 100}%` }}
+                                                    ></div>
+                                                </div>
+                                                <p style={{ fontSize: '0.8rem', textAlign: 'right', marginTop: '0.3rem' }}>
+                                                    {list.selections?.length || 0} / {list.limit} selected
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p style={{ color: '#999' }}>No lists created yet.</p>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === 'settings' && (
+                        <div>
+                            <div className="create-section" style={{ border: '1px solid #ffcccc' }}>
+                                <h3 style={{ color: '#d32f2f' }}>Danger Zone</h3>
+                                <p>Deleting a gallery is irreversible.</p>
+                                <button
+                                    className="danger-btn"
+                                    onClick={() => {
+                                        if (window.confirm('Are you sure?')) {
+                                            deleteGallery(gallery.id);
+                                            setSelectedGallery(null);
+                                        }
+                                    }}
+                                >
+                                    Delete Gallery
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </main>
+            </div>
+        );
+    }
 
     return (
         <div className="admin-container">
-            <nav className="admin-nav">
-                <Link to="/store" className="back-link">← Back to Store</Link>
-                <h1>Store Admin</h1>
-            </nav>
+            <Sidebar activeView={activeView} setActiveView={setActiveView} />
 
-            <div className="admin-content">
-                <div className="add-product-section">
-                    <h2>Add New Product</h2>
-                    <form onSubmit={handleSubmit} className="admin-form">
-                        <div className="form-group">
-                            <label>Product Name</label>
-                            <input
-                                type="text"
-                                name="name"
-                                value={newProduct.name}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
+            <main className="admin-main">
+                <header className="admin-header">
+                    <h1 className="page-title">
+                        {activeView === 'galleries' && 'Client Galleries'}
+                        {activeView === 'products' && 'Store Products'}
+                    </h1>
+                    {activeView === 'galleries' && (
+                        <button className="primary-btn" onClick={() => setShowCreateModal(true)}>+ New Client</button>
+                    )}
+                </header>
 
-                        <div className="form-group">
-                            <label>Price (€)</label>
-                            <input
-                                type="number"
-                                name="price"
-                                value={newProduct.price}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Category</label>
-                            <select name="category" value={newProduct.category} onChange={handleChange}>
-                                <option value="Clothing">Clothing</option>
-                                <option value="Shoes">Shoes</option>
-                                <option value="Accessories">Accessories</option>
-                            </select>
-                        </div>
-
-                        <div className="form-group">
-                            <label>Product Image</label>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleImageUpload}
-                            />
-                            {newProduct.image && (
-                                <div className="image-preview">
-                                    <img src={newProduct.image} alt="Preview" />
+                {activeView === 'galleries' && (
+                    <div className="clients-grid">
+                        {galleries.map(gallery => (
+                            <div key={gallery.id} className="client-card" onClick={() => setSelectedGallery(gallery)}>
+                                <div
+                                    className="card-cover"
+                                    style={{ backgroundImage: `url(${gallery.coverPhotoUrl || gallery.images?.[0]?.url || ''})` }}
+                                >
+                                    {!gallery.coverPhotoUrl && !gallery.images?.[0] && (
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#999' }}>No Images</div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
-
-                        <button type="submit" className="add-btn">Add Product</button>
-                    </form>
-                </div>
-
-                <div className="product-list-section">
-                    <h2>Current Products</h2>
-                    <div className="admin-product-list">
-                        {products.map(product => (
-                            <div key={product.id} className="admin-product-item">
-                                <div className="admin-product-info">
-                                    <span className="name">{product.name}</span>
-                                    <span className="price">€{product.price.toFixed(2)}</span>
-                                    <span className="category">{product.category}</span>
+                                <div className="card-info">
+                                    <h3>{gallery.clientName}</h3>
+                                    <p>{gallery.images?.length || 0} Photos</p>
                                 </div>
                             </div>
                         ))}
                     </div>
+                )}
+
+                {activeView === 'products' && (
+                    <div>
+                        {/* Product management (simplified for now to focus on gallery features) */}
+                        <p>Product management goes here...</p>
+                    </div>
+                )}
+            </main>
+
+            {/* Create Client Modal */}
+            {showCreateModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h2>New Client Gallery</h2>
+                            <button className="close-btn" onClick={() => { setShowCreateModal(false); setCreatedClientCreds(null); }}>×</button>
+                        </div>
+
+                        {!createdClientCreds ? (
+                            <form onSubmit={handleCreateGallery}>
+                                <div className="form-group">
+                                    <label>Client Name</label>
+                                    <input
+                                        type="text"
+                                        value={newClientName}
+                                        onChange={(e) => setNewClientName(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Email Address</label>
+                                    <input
+                                        type="email"
+                                        value={newClientEmail}
+                                        onChange={(e) => setNewClientEmail(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <button type="submit" className="primary-btn" style={{ width: '100%' }}>Create Gallery</button>
+                            </form>
+                        ) : (
+                            <div className="credentials-box">
+                                <h3 style={{ color: 'green' }}>Gallery Created!</h3>
+                                <p><strong>Email:</strong> {createdClientCreds.email}</p>
+                                <p><strong>Password:</strong> <code className="password-display">{createdClientCreds.password}</code></p>
+                                <p className="copy-hint">Please copy these credentials now.</p>
+                                <button className="secondary-btn" onClick={() => { setShowCreateModal(false); setCreatedClientCreds(null); }} style={{ width: '100%', marginTop: '1rem' }}>Done</button>
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
+    );
+}
+
+function Sidebar({ activeView, setActiveView }) {
+    return (
+        <aside className="admin-sidebar">
+            <div className="sidebar-logo">Smile Admin</div>
+            <nav className="sidebar-nav">
+                <button
+                    className={`nav-item ${activeView === 'galleries' ? 'active' : ''}`}
+                    onClick={() => setActiveView('galleries')}
+                >
+                    Galleries
+                </button>
+                <button
+                    className={`nav-item ${activeView === 'products' ? 'active' : ''}`}
+                    onClick={() => setActiveView('products')}
+                >
+                    Products
+                </button>
+            </nav>
+            <div className="sidebar-footer">
+                <Link to="/store" className="nav-item">← Back to Store</Link>
+            </div>
+        </aside>
     );
 }
 

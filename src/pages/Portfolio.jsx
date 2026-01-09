@@ -1,6 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Portfolio.css';
+
+import pdfPicture from '../2026SDMPicturePackage.pdf';
+import pdfVideo from '../2026SDMVideoPackage.pdf';
+import pdfCombo from '../2026SDMVideo+PicturesPackage.pdf';
 
 function Portfolio() {
     const [formData, setFormData] = useState({
@@ -11,6 +15,16 @@ function Portfolio() {
         eventDate: '',
         eventType: 'Wedding'
     });
+
+    const [scrolled, setScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 50);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -26,7 +40,6 @@ function Portfolio() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-
         const subject = `New Inquiry: ${formData.eventType} - ${formData.eventDate}`;
         const body = `Name: ${formData.firstName} ${formData.lastName}
 Email: ${formData.email}
@@ -37,36 +50,170 @@ Event Type: ${formData.eventType}
 Sent from Smiledefinition Media Portfolio`;
 
         const mailtoLink = `mailto:smiledefinitionpro@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-
         window.location.href = mailtoLink;
-
-        // Optional: Reset form or show success message
-        alert('Opening your email client to send the inquiry...');
     };
 
+    const videos = [
+        { title: "Annabel & Genesis", src: "/videos/Annabel&Genesis HL.mp4", rotate: -90, scale: 1.78 },
+        { title: "Chidinma & Onyeka", src: "/videos/Chidinma & Onyeka Hightlights.mp4" },
+        { title: "Aisha & Najeem", src: "/videos/Aisha&Najeem Highlights1.mp4" },
+        { title: "B & L", src: "/videos/B&L Highlights.mp4" },
+        { title: "I & D", src: "/videos/I&D Highlights.mp4", rotate: -90, scale: 1.78 },
+        { title: "Ronald Traditional", src: "/videos/Ronald Traditional Wedding Thriller.mp4", rotate: -90, scale: 1.78 }
+    ];
+
+    const [darkMode, setDarkMode] = useState(false);
+
+    const toggleDarkMode = () => {
+        setDarkMode(!darkMode);
+    };
+
+
+
+    const aboutImages = [
+        "/3L7A1025.jpeg",
+        "/3L7A0991.jpeg",
+        "/3L7A0984.jpeg"
+    ];
+
+    const [currentAboutImageIndex, setCurrentAboutImageIndex] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentAboutImageIndex((prevIndex) => (prevIndex + 1) % aboutImages.length);
+        }, 4000);
+
+        return () => clearInterval(interval);
+    }, []);
+
     return (
-        <div className="portfolio-container">
+        <div className={`portfolio-container ${darkMode ? 'dark-mode' : ''}`}>
             {/* Navigation */}
-            <nav className="portfolio-nav">
+            <nav className={`portfolio-nav ${scrolled ? 'scrolled' : ''}`}>
                 <div className="nav-logo">
                     <img src="/assets/logo.png" alt="SmiledefinitionMedia" />
                     <span>Smiledefinition Media</span>
                 </div>
                 <div className="nav-links">
                     <a href="#home">Home</a>
-                    <a href="#about">About</a>
+                    <a href="#portfolio">Portfolio</a>
                     <a href="#packages">Packages</a>
-                    <a href="#contact">Contact</a>
-                    <Link to="/" className="back-link">Back to Landing</Link>
+                    <a href="#about">About</a>
+                    <a href="#contact" className="contact-link">Contact</a>
+                    <Link to="/gallery" className="client-link">Client Access</Link>
+                    <button onClick={toggleDarkMode} className="theme-toggle" style={{ cursor: 'pointer', fontSize: '1.2rem', padding: '0.5rem', borderRadius: '50%', border: 'none', background: 'transparent' }}>
+                        {darkMode ? '☀️' : '🌙'}
+                    </button>
                 </div>
             </nav>
 
-            {/* Hero / Highlights */}
+            {/* Hero Section */}
             <section id="home" className="hero-section">
+                <div
+                    className="hero-bg-slide active"
+                    style={{ backgroundImage: `url('/Studio Pictures/054A9422.jpg')` }}
+                ></div>
+                <div className="hero-overlay"></div>
                 <div className="hero-content">
-                    <h1>Capturing Love Stories</h1>
-                    <p>Cinematic Wedding Films & Photography</p>
-                    <a href="#contact" className="cta-btn">Book Your Date</a>
+                    <span className="hero-subtitle">Cinematic Wedding Films & Photography</span>
+                    <h1>Capturing Your<br />Love Story</h1>
+                    <p>Timeless moments, elegantly preserved for generations.</p>
+                    <div className="hero-buttons">
+                        <a href="#contact" className="primary-btn">Book Your Date</a>
+                        <a href="#portfolio" className="secondary-btn">View Our Work</a>
+                    </div>
+                </div>
+            </section>
+
+            {/* Video Showcase */}
+            <section id="portfolio" className="video-section">
+                <div className="section-header">
+                    <span className="section-tag">Our Work</span>
+                    <h2>Cinematic Highlights</h2>
+                    <p>Relive the emotion, the laughter, and the love.</p>
+                </div>
+                <div className="video-grid">
+                    {videos.map((video, index) => (
+                        <div key={index} className="video-card">
+                            <div className="video-wrapper">
+                                <video
+                                    muted
+                                    loop
+                                    playsInline
+                                    style={{
+                                        transform: `${video.rotate ? `rotate(${video.rotate}deg)` : ''} ${video.scale ? `scale(${video.scale})` : ''}`.trim()
+                                    }}
+                                    onMouseOver={(e) => e.target.play()}
+                                    onMouseOut={(e) => {
+                                        e.target.pause();
+                                        e.target.currentTime = 0;
+                                    }}
+                                >
+                                    <source src={`${video.src}#t=0.5`} type="video/mp4" />
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                            <h3>{video.title}</h3>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            {/* Packages */}
+            <section id="packages" className="packages-section">
+                <div className="section-header">
+                    <span className="section-tag">Packages</span>
+                    <h2>2026 Packages</h2>
+                    <p>Choose the perfect collection for your special day.</p>
+                </div>
+                <div className="packages-grid">
+                    <div className="package-card">
+                        <div className="package-icon">🎥</div>
+                        <h3>Video Package</h3>
+                        <p>Cinematic storytelling of your wedding day.</p>
+                        <ul className="package-features">
+                            <li>Full Day Coverage</li>
+                            <li>Highlight Reel</li>
+                            <li>Full Ceremony & Speeches</li>
+                            <li>Drone Footage (Weather permitting)</li>
+                        </ul>
+                        <div className="package-actions">
+                            <a href={pdfVideo} target="_blank" rel="noopener noreferrer" className="download-link">View Full Details (PDF)</a>
+                            <button onClick={() => handleInquire('Wedding Film')} className="inquire-btn">Inquire Now</button>
+                        </div>
+                    </div>
+                    <div className="package-card featured">
+                        <div className="popular-tag">Most Popular</div>
+                        <div className="package-icon">✨</div>
+                        <h3>Combo Package</h3>
+                        <p>The complete experience: Photo & Video.</p>
+                        <ul className="package-features">
+                            <li>2 Videographers & 1 Photographer</li>
+                            <li>Full Day Coverage</li>
+                            <li>High-Res Edited Images</li>
+                            <li>Cinematic Highlight Film</li>
+                            <li>Online Gallery</li>
+                        </ul>
+                        <div className="package-actions">
+                            <a href={pdfCombo} target="_blank" rel="noopener noreferrer" className="download-link">View Full Details (PDF)</a>
+                            <button onClick={() => handleInquire('Combo Package')} className="inquire-btn">Inquire Now</button>
+                        </div>
+                    </div>
+                    <div className="package-card">
+                        <div className="package-icon">📸</div>
+                        <h3>Picture Package</h3>
+                        <p>Timeless photography to cherish forever.</p>
+                        <ul className="package-features">
+                            <li>Full Day Coverage</li>
+                            <li>Unlimited High-Res Images</li>
+                            <li>Online Gallery</li>
+                            <li>Sneak Peeks within 48hrs</li>
+                        </ul>
+                        <div className="package-actions">
+                            <a href={pdfPicture} target="_blank" rel="noopener noreferrer" className="download-link">View Full Details (PDF)</a>
+                            <button onClick={() => handleInquire('Photography')} className="inquire-btn">Inquire Now</button>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -74,96 +221,112 @@ Sent from Smiledefinition Media Portfolio`;
             <section id="about" className="about-section">
                 <div className="about-container">
                     <div className="about-image">
-                        <img src="/assets/smile-portrait.png" alt="Olufunsho (Smile)" />
+                        {aboutImages.map((img, index) => (
+                            <img
+                                key={index}
+                                src={img}
+                                alt={`Olufunsho (Smile) ${index + 1}`}
+                                className={`about-slide ${index === currentAboutImageIndex ? 'active' : ''}`}
+                            />
+                        ))}
+                        <div className="image-frame"></div>
                     </div>
                     <div className="about-text">
-                        <h2>About Me</h2>
-                        <p>
-                            Hi my Name is Olufunsho known as me as Smile. I began filming weddings in 2015, and ever since, I’ve been dedicated to capturing beautiful love stories with creativity and care. I’m based in Waterford, where I studied photography at Waterford College before expanding my skills into professional wedding videography.
+                        <span className="section-tag">The Artist</span>
+                        <h2>Meet Smile</h2>
+                        <p className="lead-text">
+                            "I believe every love story deserves to be told with authenticity and grace."
                         </p>
                         <p>
-                            My work is guided by my artistic passion as well as my religious values, which permit me to film weddings between a man and a woman. Alongside wedding films, I also provide professional studio photography, delivering high-quality images that preserve life’s most meaningful moments.
+                            Hi, I'm Olufunsho, better known as Smile. Based in Waterford, I've been capturing weddings since 2015. My journey began at Waterford College where I studied photography, before expanding into cinematic videography.
+                        </p>
+                        <p>
+                            My work is grounded in my artistic passion and personal values. I strive to create a relaxed atmosphere where you can be yourselves, allowing me to capture the genuine, unscripted moments that make your day unique.
                         </p>
                     </div>
-                </div>
-            </section>
-
-            {/* Packages */}
-            <section id="packages" className="packages-section">
-                <h2>Packages & Add Ons</h2>
-                <div className="packages-grid">
-                    <div className="package-card">
-                        <h3>Wedding Film</h3>
-                        <p>Full cinematic coverage of your special day.</p>
-                        <button onClick={() => handleInquire('Wedding Film')}>Inquire</button>
-                    </div>
-                    <div className="package-card">
-                        <h3>Photography</h3>
-                        <p>Professional studio and event photography.</p>
-                        <button onClick={() => handleInquire('Photography')}>Inquire</button>
-                    </div>
-                    <div className="package-card">
-                        <h3>Combo</h3>
-                        <p>The complete package: Film & Photo.</p>
-                        <button onClick={() => handleInquire('Combo Package')}>Inquire</button>
-                    </div>
-                </div>
-            </section>
-
-            {/* Testimonials */}
-            <section className="testimonials-section">
-                <h2>Testimonials</h2>
-                <div className="testimonial">
-                    <p>"Smile captured our day perfectly. The video brings tears to our eyes every time we watch it."</p>
-                    <span>- Sarah & John</span>
                 </div>
             </section>
 
             {/* Contact */}
             <section id="contact" className="contact-section">
-                <h2>Get In Touch</h2>
-                <div className="contact-info">
-                    <p>Contact: +353899882998</p>
-                    <p>Email: smiledefinitionpro@gmail.com</p>
+                <div className="contact-container">
+                    <div className="contact-info">
+                        <h2>Let's Create Magic</h2>
+                        <p>We'd love to hear about your plans. Fill out the form or reach out directly.</p>
+                        <div className="contact-details">
+                            <div className="contact-item">
+                                <span className="icon">📞</span>
+                                <div>
+                                    <label>Phone</label>
+                                    <a href="tel:+353899882998">+353 89 988 2998</a>
+                                </div>
+                            </div>
+                            <div className="contact-item">
+                                <span className="icon">✉️</span>
+                                <div>
+                                    <label>Email</label>
+                                    <a href="mailto:smiledefinitionpro@gmail.com">smiledefinitionpro@gmail.com</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <form className="contact-form" onSubmit={handleSubmit}>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>First Name</label>
+                                <input type="text" name="firstName" required onChange={handleChange} value={formData.firstName} />
+                            </div>
+                            <div className="form-group">
+                                <label>Last Name</label>
+                                <input type="text" name="lastName" required onChange={handleChange} value={formData.lastName} />
+                            </div>
+                        </div>
+                        <div className="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" required onChange={handleChange} value={formData.email} />
+                        </div>
+                        <div className="form-group">
+                            <label>Phone</label>
+                            <input type="tel" name="phone" onChange={handleChange} value={formData.phone} />
+                        </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Event Date</label>
+                                <input type="date" name="eventDate" required onChange={handleChange} value={formData.eventDate} />
+                            </div>
+                            <div className="form-group">
+                                <label>Event Type</label>
+                                <select name="eventType" onChange={handleChange} value={formData.eventType}>
+                                    <option value="Wedding">Wedding</option>
+                                    <option value="Wedding Film">Wedding Film</option>
+                                    <option value="Photography">Photography</option>
+                                    <option value="Combo Package">Combo Package</option>
+                                    <option value="Studio">Studio Session</option>
+                                    <option value="Birthday">Birthday</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" className="submit-btn">Send Message</button>
+                    </form>
                 </div>
-                <form className="contact-form" onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label>First Name</label>
-                        <input type="text" name="firstName" required onChange={handleChange} value={formData.firstName} />
-                    </div>
-                    <div className="form-group">
-                        <label>Last Name</label>
-                        <input type="text" name="lastName" required onChange={handleChange} value={formData.lastName} />
-                    </div>
-                    <div className="form-group">
-                        <label>Email</label>
-                        <input type="email" name="email" required onChange={handleChange} value={formData.email} />
-                    </div>
-                    <div className="form-group">
-                        <label>Phone</label>
-                        <input type="tel" name="phone" onChange={handleChange} value={formData.phone} />
-                    </div>
-                    <div className="form-group">
-                        <label>Event Date</label>
-                        <input type="date" name="eventDate" required onChange={handleChange} value={formData.eventDate} />
-                    </div>
-                    <div className="form-group">
-                        <label>Event Type</label>
-                        <select name="eventType" onChange={handleChange} value={formData.eventType}>
-                            <option value="Wedding">Wedding</option>
-                            <option value="Birthday">Birthday</option>
-                            <option value="Studio">Studio Session</option>
-                            <option value="Wedding Film">Wedding Film</option>
-                            <option value="Photography">Photography</option>
-                            <option value="Combo Package">Combo Package</option>
-                        </select>
-                    </div>
-                    <button type="submit" className="submit-btn">Send Message</button>
-                </form>
             </section>
 
             <footer className="portfolio-footer">
-                <p>© 2026 Smiledefinition Media. All rights reserved.</p>
+                <div className="footer-content">
+                    <div className="footer-logo">
+                        <h3>Smiledefinition Media</h3>
+                        <p>Capturing moments, creating memories.</p>
+                    </div>
+                    <div className="footer-links">
+                        <a href="#home">Home</a>
+                        <a href="#portfolio">Portfolio</a>
+                        <a href="#packages">Packages</a>
+                        <Link to="/gallery">Client Access</Link>
+                    </div>
+                </div>
+                <div className="footer-bottom">
+                    <p>© 2026 Smiledefinition Media. All rights reserved.</p>
+                </div>
             </footer>
         </div>
     );
