@@ -25,3 +25,6 @@ dist-ssr
 
 # Large Media Files
 *.mp4
+
+# Environment Variables
+.env
