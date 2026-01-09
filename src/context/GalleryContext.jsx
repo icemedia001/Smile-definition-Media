@@ -1,6 +1,51 @@
+import { createContext, useContext, useState, useEffect } from 'react';
+import { db } from '../firebase';
+import { collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, arrayUnion, onSnapshot } from 'firebase/firestore';
 import bcrypt from 'bcryptjs';
 
+const GalleryContext = createContext();
+
+export const useGallery = () => {
+    return useContext(GalleryContext);
+};
+
 export const GalleryProvider = ({ children }) => {
+    const [galleries, setGalleries] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [currentClient, setCurrentClient] = useState(null);
+
+    useEffect(() => {
+        const unsubscribe = onSnapshot(collection(db, 'galleries'), (snapshot) => {
+            const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setGalleries(list);
+            setLoading(false);
+        });
+        return () => unsubscribe();
+    }, []);
+
+    const uploadImageToCloudinary = async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`, {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        return data.secure_url;
+    };
+
+    const addImagesToGallery = async (galleryId, files) => {
+        const promises = files.map(async file => {
+            const url = await uploadImageToCloudinary(file);
+            return { id: Date.now() + Math.random(), url, selected: false };
+        });
+        const newImages = await Promise.all(promises);
+        await updateDoc(doc(db, 'galleries', galleryId), {
+            images: arrayUnion(...newImages)
+        });
+    };
+
     const generatePassword = () => {
         const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%";
         let password = "";
@@ -167,8 +212,6 @@ export const GalleryProvider = ({ children }) => {
             addImagesToGallery,
             clientLogin,
             clientLogout,
-            toggleImageSelection,
-            uploadEditedImage,
             toggleImageSelection,
             uploadEditedImage,
             deleteGallery,

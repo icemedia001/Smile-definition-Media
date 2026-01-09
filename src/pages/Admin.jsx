@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { useGallery } from '../context/GalleryContext';
 import { Link } from 'react-router-dom';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase';
 import './Admin.css';
 
 function Admin() {
@@ -17,6 +19,7 @@ function Admin() {
     } = useGallery();
 
     const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem('adminAuth') === 'true');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [activeView, setActiveView] = useState('galleries');
     const [selectedGallery, setSelectedGallery] = useState(null);
@@ -31,13 +34,15 @@ function Admin() {
 
     const [isUploading, setIsUploading] = useState(false);
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        if (password === import.meta.env.VITE_ADMIN_PASSWORD) {
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
             setIsAuthenticated(true);
             localStorage.setItem('adminAuth', 'true');
-        } else {
-            alert('Incorrect password');
+        } catch (error) {
+            console.error("Login Error:", error);
+            alert('Incorrect email or password');
         }
     };
 
@@ -96,10 +101,19 @@ function Admin() {
                     <form onSubmit={handleLogin}>
                         <h2>Admin Access</h2>
                         <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Admin Email"
+                            required
+                            style={{ marginBottom: '1rem', width: '100%', padding: '0.8rem' }}
+                        />
+                        <input
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter password"
+                            placeholder="Password"
+                            required
                         />
                         <button type="submit">Login</button>
                     </form>
