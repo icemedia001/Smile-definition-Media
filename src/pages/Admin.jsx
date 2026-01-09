@@ -33,7 +33,7 @@ function Admin() {
 
     const handleLogin = (e) => {
         e.preventDefault();
-        if (password === import.meta.env.VITE_ADMIN_PASSWORD) {
+        if (password === import.meta.env.ADMIN_PASSWORD) {
             setIsAuthenticated(true);
             localStorage.setItem('adminAuth', 'true');
         } else {
