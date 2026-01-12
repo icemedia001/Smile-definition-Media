@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Portfolio.css';
 
-import pdfPicture from '../2026SDMPicturePackage.pdf';
-import pdfVideo from '../2026SDMVideoPackage.pdf';
-import pdfCombo from '../2026SDMVideo+PicturesPackage.pdf';
+import { PACKAGES } from '../data/packages';
+import ServiceCard from '../components/ServiceCard';
 
 function Portfolio() {
     const [formData, setFormData] = useState({
@@ -115,7 +114,7 @@ Sent from Smiledefinition Media Portfolio`;
                 ></div>
                 <div className="hero-overlay"></div>
                 <div className="hero-content">
-                    <span className="hero-subtitle">Cinematic Wedding Films & Photography</span>
+                    {/* <span className="hero-subtitle">Cinematic Wedding Films & Photography</span> */}
                     <h1>Capturing Your<br />Love Story</h1>
                     <p>Timeless moments, elegantly preserved for generations.</p>
                     <div className="hero-buttons">
@@ -166,54 +165,15 @@ Sent from Smiledefinition Media Portfolio`;
                     <h2>2026 Packages</h2>
                     <p>Choose the perfect collection for your special day.</p>
                 </div>
-                <div className="packages-grid">
-                    <div className="package-card">
-                        <div className="package-icon">🎥</div>
-                        <h3>Video Package</h3>
-                        <p>Cinematic storytelling of your wedding day.</p>
-                        <ul className="package-features">
-                            <li>Full Day Coverage</li>
-                            <li>Highlight Reel</li>
-                            <li>Full Ceremony & Speeches</li>
-                            <li>Drone Footage (Weather permitting)</li>
-                        </ul>
-                        <div className="package-actions">
-                            <a href={pdfVideo} target="_blank" rel="noopener noreferrer" className="download-link">View Full Details (PDF)</a>
-                            <button onClick={() => handleInquire('Wedding Film')} className="inquire-btn">Inquire Now</button>
-                        </div>
-                    </div>
-                    <div className="package-card featured">
-                        <div className="popular-tag">Most Popular</div>
-                        <div className="package-icon">✨</div>
-                        <h3>Combo Package</h3>
-                        <p>The complete experience: Photo & Video.</p>
-                        <ul className="package-features">
-                            <li>2 Videographers & 1 Photographer</li>
-                            <li>Full Day Coverage</li>
-                            <li>High-Res Edited Images</li>
-                            <li>Cinematic Highlight Film</li>
-                            <li>Online Gallery</li>
-                        </ul>
-                        <div className="package-actions">
-                            <a href={pdfCombo} target="_blank" rel="noopener noreferrer" className="download-link">View Full Details (PDF)</a>
-                            <button onClick={() => handleInquire('Combo Package')} className="inquire-btn">Inquire Now</button>
-                        </div>
-                    </div>
-                    <div className="package-card">
-                        <div className="package-icon">📸</div>
-                        <h3>Picture Package</h3>
-                        <p>Timeless photography to cherish forever.</p>
-                        <ul className="package-features">
-                            <li>Full Day Coverage</li>
-                            <li>Unlimited High-Res Images</li>
-                            <li>Online Gallery</li>
-                            <li>Sneak Peeks within 48hrs</li>
-                        </ul>
-                        <div className="package-actions">
-                            <a href={pdfPicture} target="_blank" rel="noopener noreferrer" className="download-link">View Full Details (PDF)</a>
-                            <button onClick={() => handleInquire('Photography')} className="inquire-btn">Inquire Now</button>
-                        </div>
-                    </div>
+                <div className="packages-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                    gap: '2rem',
+                    padding: '0 2rem'
+                }}>
+                    {PACKAGES.map(pkg => (
+                        <ServiceCard key={pkg.id} packageData={pkg} />
+                    ))}
                 </div>
             </section>
 

@@ -1,5 +1,7 @@
 /* Global Portfolio Variables */
-:root {
+/* Global Portfolio Variables - Scoped to avoid conflicts */
+.portfolio-container,
+.service-detail-container {
     --primary-color: #c5a059;
     /* Gold - Primary Brand Color */
     --primary-dark: #a38343;
