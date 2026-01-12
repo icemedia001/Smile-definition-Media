@@ -1,0 +1,292 @@
+/* Service Detail Page Styles */
+/* Inherits variables from Portfolio.css if loaded, otherwise we rely on global defaults or re-import */
+
+.service-detail-container {
+    background-color: var(--white, #ffffff);
+    min-height: 100vh;
+    font-family: var(--font-body, 'Inter', sans-serif);
+    color: var(--text-color, #4a4a4a);
+}
+
+/* Reusing Portfolio Nav styles by structure, but ensuring specific overrides if needed */
+.service-nav-placeholder {
+    height: 80px;
+    background: #000; /* Fallback */
+}
+
+/* Service Hero */
+.service-hero {
+    height: 60vh;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    background-color: #0a0a0a;
+    overflow: hidden;
+    margin-bottom: 4rem;
+}
+
+.service-hero-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0.6;
+}
+
+.service-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7));
+}
+
+.service-hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+    padding: 0 2rem;
+    animation: fadeIn 1s ease-out;
+}
+
+.service-hero h1 {
+    font-family: var(--font-heading, 'Playfair Display', serif);
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    text-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+.service-hero p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Main Content Layout */
+.service-content-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem 6rem;
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 4rem;
+}
+
+/* Left Column */
+.service-main h2 {
+    font-family: var(--font-heading, 'Playfair Display', serif);
+    font-size: 2rem;
+    color: var(--heading-color, #2c2c2c);
+    margin-bottom: 1.5rem;
+    margin-top: 3rem;
+}
+
+.service-main h2:first-child {
+    margin-top: 0;
+}
+
+/* Tier Selection */
+.tier-grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.tier-card {
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+    position: relative;
+}
+
+.tier-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.tier-card.selected {
+    border-color: var(--primary-color, #c5a059);
+    background-color: #fdfbf7; /* Light warm cream */
+    box-shadow: 0 5px 20px rgba(197, 160, 89, 0.15);
+}
+
+.tier-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.tier-header h3 {
+    font-family: var(--font-heading, 'Playfair Display', serif);
+    font-size: 1.4rem;
+    margin: 0;
+    color: var(--heading-color, #2c2c2c);
+}
+
+.tier-price {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary-color, #c5a059);
+}
+
+.tier-features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.tier-features li {
+    padding: 0.4rem 0;
+    font-size: 0.95rem;
+    color: #666;
+    display: flex;
+    align-items: center;
+}
+
+.tier-features li::before {
+    content: '•';
+    color: var(--primary-color, #c5a059);
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+
+/* Addons Grid */
+.addon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.addon-card {
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.addon-card:hover {
+    border-color: #ddd;
+}
+
+.addon-card.selected {
+    border-color: var(--primary-color, #c5a059);
+    background-color: #fdfbf7;
+    box-shadow: 0 2px 8px rgba(197, 160, 89, 0.1);
+}
+
+.addon-name {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.addon-price {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.addon-card.selected .addon-price {
+    color: var(--primary-color, #c5a059);
+}
+
+/* Booking Summary Sidebar */
+.summary-card {
+    position: sticky;
+    top: 100px; /* Account for fixed nav */
+    background: white;
+    padding: 2rem;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+}
+
+.summary-card h3 {
+    font-family: var(--font-heading, 'Playfair Display', serif);
+    font-size: 1.5rem;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.8rem;
+    font-size: 0.95rem;
+}
+
+.summary-item.tier {
+    font-weight: 600;
+    color: var(--heading-color, #2c2c2c);
+    margin-bottom: 1rem;
+}
+
+.summary-item.addon {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.summary-total {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #f5f5f5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--heading-color, #2c2c2c);
+    margin-bottom: 2rem;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    margin-bottom: 2rem;
+    position: absolute;
+    top: 2rem;
+    left: 2rem;
+    z-index: 10;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    transition: transform 0.2s;
+}
+
+.back-link:hover {
+    transform: translateX(-5px);
+    color: var(--primary-color, #c5a059);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .service-content-wrapper {
+        grid-template-columns: 1fr;
+    }
+    
+    .summary-card {
+        position: static;
+        margin-top: 2rem;
+    }
+    
+    .service-hero h1 {
+        font-size: 2.5rem;
+    }
+}
