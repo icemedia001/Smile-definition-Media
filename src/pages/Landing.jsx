@@ -31,9 +31,9 @@ function Landing() {
                 onMouseLeave={() => setHoveredSide(null)}
             >
                 <div className="content">
-                    <span className="subtitle">FILMS & STORIES</span>
-                    <h1 className="title">PORTFOLIO</h1>
-                    <p className="description">Building films, highlights & full cinematic love stories.</p>
+                    <span className="subtitle">CINEMATIC EXPERIENCES</span>
+                    <h1 className="title">YOUR STORY</h1>
+                    <p className="description">Capturing timeless moments, love stories, and celebrations.</p>
                     <Link to="/portfolio" className="btn">VIEW PORTFOLIO <span className="arrow">→</span></Link>
                 </div>
                 <div className="overlay"></div>
