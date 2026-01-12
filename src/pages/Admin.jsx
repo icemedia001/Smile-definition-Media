@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { useGallery } from '../context/GalleryContext';
+import { useBooking } from '../context/BookingContext';
 import { Link } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
+import ImageModal from '../components/ImageModal';
 import './Admin.css';
 
 function Admin() {
     const { addProduct, products } = useStore();
+    const { fetchAllBookings } = useBooking();
+    const [bookings, setBookings] = useState([]);
     const {
         galleries,
         createGallery,
@@ -24,6 +28,7 @@ function Admin() {
     const [activeView, setActiveView] = useState('galleries');
     const [selectedGallery, setSelectedGallery] = useState(null);
     const [activeTab, setActiveTab] = useState('photos');
+    const [previewImage, setPreviewImage] = useState(null);
 
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newClientName, setNewClientName] = useState('');
@@ -40,6 +45,9 @@ function Admin() {
             await signInWithEmailAndPassword(auth, email, password);
             setIsAuthenticated(true);
             localStorage.setItem('adminAuth', 'true');
+            // Fetch bookings on login
+            const allBookings = await fetchAllBookings();
+            setBookings(allBookings);
         } catch (error) {
             console.error("Login Error:", error);
             alert('Incorrect email or password');
@@ -174,7 +182,12 @@ function Admin() {
                             <div className="admin-gallery-grid">
                                 {gallery.images?.map(img => (
                                     <div key={img.id} className="admin-img-card">
-                                        <img src={img.url} alt="gallery" />
+                                        <img
+                                            src={img.url}
+                                            alt="gallery"
+                                            onClick={() => setPreviewImage(img.url)}
+                                            style={{ cursor: 'pointer' }}
+                                        />
                                         <div className="img-actions">
                                             <button className="action-btn" onClick={() => handleSetCover(gallery.id, img.url)}>Set Cover</button>
                                             {/* Add more actions like Delete or Edit here */}
@@ -183,6 +196,12 @@ function Admin() {
                                     </div>
                                 ))}
                             </div>
+
+                            <ImageModal
+                                isOpen={!!previewImage}
+                                onClose={() => setPreviewImage(null)}
+                                imageUrl={previewImage}
+                            />
                         </div>
                     )}
 
@@ -275,6 +294,7 @@ function Admin() {
                     <h1 className="page-title">
                         {activeView === 'galleries' && 'Client Galleries'}
                         {activeView === 'products' && 'Store Products'}
+                        {activeView === 'bookings' && 'Service Bookings'}
                     </h1>
                     {activeView === 'galleries' && (
                         <button className="primary-btn" onClick={() => setShowCreateModal(true)}>+ New Client</button>
@@ -306,6 +326,62 @@ function Admin() {
                     <div>
                         {/* Product management (simplified for now to focus on gallery features) */}
                         <p>Product management goes here...</p>
+                    </div>
+                )}
+
+                {activeView === 'bookings' && (
+                    <div className="bookings-list">
+                        {bookings.length === 0 ? (
+                            <p>No bookings found.</p>
+                        ) : (
+                            bookings.map(booking => (
+                                <div key={booking.id} style={{
+                                    padding: '1.5rem',
+                                    backgroundColor: '#fff',
+                                    marginBottom: '1rem',
+                                    borderRadius: '8px',
+                                    border: '1px solid #eee'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                                        <div>
+                                            <h3 style={{ margin: 0 }}>{booking.userName}</h3>
+                                            <p style={{ color: '#666', margin: 0 }}>{booking.userEmail}</p>
+                                        </div>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <span style={{
+                                                padding: '0.3rem 0.8rem',
+                                                borderRadius: '20px',
+                                                backgroundColor: booking.status === 'confirmed' ? '#e8f5e9' : '#fff3e0',
+                                                color: booking.status === 'confirmed' ? '#2e7d32' : '#ef6c00',
+                                                fontSize: '0.9rem',
+                                                fontWeight: 'bold'
+                                            }}>
+                                                {booking.status.toUpperCase()}
+                                            </span>
+                                            <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: '#888' }}>
+                                                {new Date(booking.createdAt?.seconds * 1000).toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '1rem' }}>
+                                        {booking.items.map((item, idx) => (
+                                            <div key={idx} style={{ marginBottom: '0.5rem' }}>
+                                                <strong>{item.packageTitle}</strong> - {item.tier.name}
+                                                {item.addons.length > 0 && (
+                                                    <span style={{ color: '#666', fontSize: '0.9rem' }}>
+                                                        {' '}(+ {item.addons.map(a => a.name).join(', ')})
+                                                    </span>
+                                                )}
+                                            </div>
+                                        ))}
+                                        <div style={{ marginTop: '1rem', fontWeight: 'bold' }}>
+                                            Total: €{booking.totalAmount}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        )}
                     </div>
                 )}
             </main>
@@ -373,6 +449,12 @@ function Sidebar({ activeView, setActiveView }) {
                     onClick={() => setActiveView('products')}
                 >
                     Products
+                </button>
+                <button
+                    className={`nav-item ${activeView === 'bookings' ? 'active' : ''}`}
+                    onClick={() => setActiveView('bookings')}
+                >
+                    Bookings
                 </button>
             </nav>
             <div className="sidebar-footer">
