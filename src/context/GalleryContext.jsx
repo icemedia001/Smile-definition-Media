@@ -90,19 +90,35 @@ export const GalleryProvider = ({ children }) => {
             console.log("Login query found docs:", querySnapshot.size);
 
             if (!querySnapshot.empty) {
+                console.log("Found client, verifying password...");
                 const docData = querySnapshot.docs[0];
                 const galleryData = docData.data();
 
-                const isMatch = await bcrypt.compare(password, galleryData.password);
+                let isMatch = false;
+                try {
+                    // Try bcrypt comparison first
+                    isMatch = await bcrypt.compare(password, galleryData.password);
+                } catch (err) {
+                    console.log("Bcrypt comparison failed (likely legacy data), checking plain text...");
+                }
+
+                // Fallback: Check plain text if bcrypt failed or returned false
+                if (!isMatch && password === galleryData.password) {
+                    console.log("Plain text password match (Legacy)");
+                    isMatch = true;
+                }
 
                 if (isMatch) {
                     const clientData = { id: docData.id, ...galleryData };
                     setCurrentClient(clientData);
                     console.log("Login successful:", clientData.id);
                     return clientData;
+                } else {
+                    console.log("Password mismatch");
                 }
+            } else {
+                console.log("Login failed: No matching email found");
             }
-            console.log("Login failed: No matching credentials");
             return null;
         } catch (error) {
             console.error("Login error:", error);
