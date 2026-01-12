@@ -275,6 +275,7 @@
     align-items: flex-end;
     justify-content: flex-end;
     padding: 1.5rem;
+    pointer-events: none;
 }
 
 .image-item:hover .image-overlay {
@@ -286,6 +287,7 @@
     gap: 0.8rem;
     transform: translateY(10px);
     transition: transform 0.4s ease;
+    pointer-events: auto;
 }
 
 .image-item:hover .overlay-actions {

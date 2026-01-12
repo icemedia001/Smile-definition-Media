@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGallery } from '../context/GalleryContext';
+import ImageModal from '../components/ImageModal';
 import './ClientGallery.css';
 
 function ClientGallery() {
@@ -10,6 +11,7 @@ function ClientGallery() {
     const [activeTab, setActiveTab] = useState('all');
     const [selectedCount, setSelectedCount] = useState(0);
     const [scrolled, setScrolled] = useState(false);
+    const [previewImage, setPreviewImage] = useState(null);
 
     useEffect(() => {
         if (!currentClient) {
@@ -146,6 +148,8 @@ function ClientGallery() {
                                     src={activeTab === 'edited' && img.editedUrl ? img.editedUrl : img.url}
                                     alt={img.name}
                                     loading="lazy"
+                                    onClick={() => setPreviewImage(activeTab === 'edited' && img.editedUrl ? img.editedUrl : img.url)}
+                                    style={{ cursor: 'pointer' }}
                                 />
 
                                 <div className="image-overlay">
@@ -187,6 +191,11 @@ function ClientGallery() {
                     )}
                 </div>
             </div>
+            <ImageModal
+                isOpen={!!previewImage}
+                onClose={() => setPreviewImage(null)}
+                imageUrl={previewImage}
+            />
         </div>
     );
 }
