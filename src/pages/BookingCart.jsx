@@ -2,19 +2,56 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBooking } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
+import './BookingCart.css';
 
 function BookingCart() {
     const { cart, removeFromBookingCart, createBooking } = useBooking();
     const { currentUser } = useAuth();
     const navigate = useNavigate();
 
-    const [guestDetails, setGuestDetails] = useState({
-        name: '',
-        email: '',
+    const [bookingDetails, setBookingDetails] = useState({
         phone: '',
         date: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errors, setErrors] = useState({});
+
+    // Calculate minimum date (tomorrow)
+    const getMinDate = () => {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return tomorrow.toISOString().split('T')[0];
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+
+        // Phone validation: only numbers, at least 8 digits
+        const phoneRegex = /^[0-9]+$/;
+        if (!bookingDetails.phone) {
+            newErrors.phone = "Phone number is required";
+        } else if (!phoneRegex.test(bookingDetails.phone)) {
+            newErrors.phone = "Phone number must contain only numbers";
+        } else if (bookingDetails.phone.length < 8) {
+            newErrors.phone = "Please enter a valid phone number";
+        }
+
+        // Date validation: must be future date
+        if (!bookingDetails.date) {
+            newErrors.date = "Event date is required";
+        } else {
+            const selectedDate = new Date(bookingDetails.date);
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate()); // Compare against end of today practically
+
+            if (selectedDate <= tomorrow) {
+                newErrors.date = "Bookings must be for future dates (starting tomorrow)";
+            }
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
     const calculateTotal = () => {
         return cart.reduce((total, item) => total + item.totalPrice, 0);
@@ -24,9 +61,12 @@ function BookingCart() {
         e.preventDefault();
         if (cart.length === 0) return;
 
-        // Validate guest details if not logged in
-        if (!currentUser && (!guestDetails.name || !guestDetails.email || !guestDetails.date)) {
-            alert('Please fill in all required fields.');
+        if (!currentUser) {
+            navigate('/login?redirect=/booking');
+            return;
+        }
+
+        if (!validateForm()) {
             return;
         }
 
@@ -35,12 +75,12 @@ function BookingCart() {
         try {
             await createBooking({
                 totalAmount: calculateTotal(),
-                bookingDate: guestDetails.date || new Date().toISOString()
-            }, !currentUser ? guestDetails : null);
+                eventDate: bookingDetails.date,
+                userPhone: bookingDetails.phone
+            });
 
             alert('Booking request sent successfully! We will contact you shortly.');
-            // Redirect to a success page or home, since dashboard might not be accessible for guests
-            navigate(currentUser ? '/dashboard' : '/');
+            navigate('/dashboard');
         } catch (error) {
             console.error(error);
             alert('Failed to create booking. Please try again.');
@@ -51,21 +91,12 @@ function BookingCart() {
 
     if (cart.length === 0) {
         return (
-            <div style={{ padding: '6rem 2rem', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
-                <h1 style={{ marginBottom: '1.5rem', fontFamily: 'Playfair Display, serif' }}>Your Booking Cart is Empty</h1>
-                <p style={{ color: '#666', marginBottom: '2.5rem', fontSize: '1.1rem' }}>Looks like you haven't selected any packages yet.</p>
+            <div className="empty-cart-container">
+                <h1 className="empty-title">Your Booking Cart is Empty</h1>
+                <p className="empty-desc">Looks like you haven't selected any packages yet.</p>
                 <button
-                    onClick={() => navigate('/portfolio')}
-                    style={{
-                        padding: '1rem 2rem',
-                        backgroundColor: '#000',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '1rem',
-                        letterSpacing: '1px'
-                    }}
+                    onClick={() => navigate('/portfolio#packages')}
+                    className="hero-btn"
                 >
                     BROWSE SERVICES
                 </button>
@@ -74,93 +105,95 @@ function BookingCart() {
     }
 
     return (
-        <div className="booking-cart-page" style={{ padding: '4rem 2rem', maxWidth: '1200px', margin: '0 auto' }}>
-            <h1 style={{ fontSize: '2.5rem', marginBottom: '3rem', fontFamily: 'Playfair Display, serif', textAlign: 'center' }}>Complete Your Booking</h1>
+        <div className="booking-cart-container">
+            <h1 className="cart-title">Complete Your Booking</h1>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '4rem' }}>
+            <div className="cart-grid">
 
-                {/* Left Column: Form */}
+                {/* Left Column: Form & Items */}
                 <div>
-                    <div style={{ marginBottom: '3rem' }}>
-                        <h2 style={{ fontFamily: 'Playfair Display, serif', marginBottom: '1.5rem' }}>Contact Details</h2>
-                        {currentUser ? (
-                            <div style={{ padding: '1.5rem', background: '#f9f9f9', borderRadius: '8px' }}>
-                                <p>Logged in as <strong>{currentUser.displayName || currentUser.email}</strong></p>
+                    {!currentUser ? (
+                        <div style={{
+                            padding: '3rem',
+                            textAlign: 'center',
+                            backgroundColor: 'rgba(255,255,255,0.05)',
+                            borderRadius: '12px',
+                            marginBottom: '3rem',
+                            border: '1px solid rgba(255,255,255,0.1)'
+                        }}>
+                            <h2 style={{ fontFamily: 'Playfair Display, serif', marginBottom: '1rem' }}>Login Required</h2>
+                            <p style={{ color: '#aaa', marginBottom: '2rem' }}>You must be logged in to complete a booking.</p>
+                            <button
+                                onClick={() => navigate('/login?redirect=/booking')}
+                                className="hero-btn"
+                            >
+                                Login or Sign Up
+                            </button>
+                        </div>
+                    ) : (
+                        <div style={{ marginBottom: '3rem' }}>
+                            <h2 className="section-heading">Event Details</h2>
+                            <div className="user-badge" style={{ marginBottom: '1.5rem' }}>
+                                <p>Booking as <strong>{currentUser.displayName || currentUser.email}</strong></p>
                             </div>
-                        ) : (
-                            <form id="booking-form" onSubmit={handleCheckout} style={{ display: 'grid', gap: '1.5rem' }}>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Full Name *</label>
+
+                            <form id="booking-form" onSubmit={handleCheckout} className="contact-form">
+                                <div className="form-group">
+                                    <label>Phone Number *</label>
                                     <input
-                                        type="text"
+                                        className={`form-control ${errors.phone ? 'error' : ''}`}
+                                        type="tel"
                                         required
-                                        value={guestDetails.name}
-                                        onChange={e => setGuestDetails({ ...guestDetails, name: e.target.value })}
-                                        style={{ width: '100%', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                                        placeholder="Numbers only (e.g., 08012345678)"
+                                        value={bookingDetails.phone}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            // Allow only numbers
+                                            if (val === '' || /^[0-9]+$/.test(val)) {
+                                                setBookingDetails({ ...bookingDetails, phone: val });
+                                                // Clear error if valid
+                                                if (errors.phone) setErrors({ ...errors, phone: null });
+                                            }
+                                        }}
                                     />
+                                    {errors.phone && <span className="error-text" style={{ color: '#ff6b6b', fontSize: '0.85rem', marginTop: '0.3rem', display: 'block' }}>{errors.phone}</span>}
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                                    <div>
-                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Email Address *</label>
-                                        <input
-                                            type="email"
-                                            required
-                                            value={guestDetails.email}
-                                            onChange={e => setGuestDetails({ ...guestDetails, email: e.target.value })}
-                                            style={{ width: '100%', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Phone Number</label>
-                                        <input
-                                            type="tel"
-                                            value={guestDetails.phone}
-                                            onChange={e => setGuestDetails({ ...guestDetails, phone: e.target.value })}
-                                            style={{ width: '100%', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Event Date *</label>
+                                <div className="form-group">
+                                    <label>Event Date *</label>
                                     <input
+                                        className={`form-control ${errors.date ? 'error' : ''}`}
                                         type="date"
                                         required
-                                        value={guestDetails.date}
-                                        onChange={e => setGuestDetails({ ...guestDetails, date: e.target.value })}
-                                        style={{ width: '100%', padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                                        min={getMinDate()}
+                                        value={bookingDetails.date}
+                                        onChange={e => {
+                                            setBookingDetails({ ...bookingDetails, date: e.target.value });
+                                            if (errors.date) setErrors({ ...errors, date: null });
+                                        }}
                                     />
+                                    {errors.date && <span className="error-text" style={{ color: '#ff6b6b', fontSize: '0.85rem', marginTop: '0.3rem', display: 'block' }}>{errors.date}</span>}
                                 </div>
                             </form>
-                        )}
-                    </div>
+                        </div>
+                    )}
 
-                    {/* Cart Items List (Moved to left column under form or keep separate? Let's keep items on left, form on left too?) 
-                        Actually, let's put items on the left, and the form IS the main action. 
-                    */}
-                    <h2 style={{ fontFamily: 'Playfair Display, serif', marginBottom: '1.5rem' }}>Selected Packages</h2>
+                    <h2 className="section-heading">Selected Packages</h2>
                     <div className="cart-items">
                         {cart.map(item => (
-                            <div key={item.cartId} style={{
-                                border: '1px solid #eee',
-                                borderRadius: '8px',
-                                padding: '1.5rem',
-                                marginBottom: '1.5rem',
-                                backgroundColor: '#fff',
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-                            }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div key={item.cartId} className="cart-item">
+                                <div className="item-header">
                                     <div>
-                                        <h3 style={{ margin: '0 0 0.5rem 0', fontFamily: 'Playfair Display, serif' }}>{item.packageTitle}</h3>
-                                        <p style={{ color: '#c5a059', margin: 0, fontWeight: '600' }}>{item.tier.name}</p>
+                                        <h3 className="item-title">{item.packageTitle}</h3>
+                                        <p className="item-tier">{item.tier.name}</p>
                                     </div>
-                                    <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>€{item.totalPrice}</span>
+                                    <span className="item-price">€{item.totalPrice}</span>
                                 </div>
 
                                 {item.addons.length > 0 && (
-                                    <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #f5f5f5' }}>
-                                        <p style={{ fontSize: '0.9rem', color: '#888', marginBottom: '0.5rem' }}>Add-ons:</p>
+                                    <div className="item-addons">
+                                        <p className="addons-label">Add-ons:</p>
                                         {item.addons.map(addon => (
-                                            <div key={addon.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '0.2rem' }}>
+                                            <div key={addon.id} className="addon-row">
                                                 <span>{addon.name}</span>
                                                 <span>+€{addon.price}</span>
                                             </div>
@@ -170,16 +203,7 @@ function BookingCart() {
 
                                 <button
                                     onClick={() => removeFromBookingCart(item.cartId)}
-                                    style={{
-                                        marginTop: '1rem',
-                                        background: 'none',
-                                        border: 'none',
-                                        color: '#999',
-                                        fontSize: '0.85rem',
-                                        cursor: 'pointer',
-                                        padding: 0,
-                                        textDecoration: 'underline'
-                                    }}
+                                    className="remove-btn"
                                 >
                                     Remove
                                 </button>
@@ -190,52 +214,32 @@ function BookingCart() {
 
                 {/* Right Column: Summary */}
                 <div className="cart-summary">
-                    <div style={{
-                        border: '1px solid #eee',
-                        borderRadius: '8px',
-                        padding: '2rem',
-                        backgroundColor: '#fff',
-                        boxShadow: '0 5px 20px rgba(0,0,0,0.05)',
-                        position: 'sticky',
-                        top: '100px'
-                    }}>
-                        <h3 style={{ marginTop: 0, fontFamily: 'Playfair Display, serif' }}>Booking Summary</h3>
+                    <div className="summary-box">
+                        <h3 className="summary-title">Booking Summary</h3>
 
-                        <div style={{ margin: '2rem 0', padding: '1.5rem 0', borderTop: '1px solid #eee', borderBottom: '1px solid #eee' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem', color: '#666' }}>
+                        <div className="summary-details">
+                            <div className="summary-line">
                                 <span>Subtotal</span>
                                 <span>€{calculateTotal()}</span>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.5rem', fontWeight: 'bold', marginTop: '1rem', color: '#000' }}>
+                            <div className="summary-total">
                                 <span>Total</span>
                                 <span>€{calculateTotal()}</span>
                             </div>
                         </div>
 
-                        <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '2rem', lineHeight: '1.6' }}>
+                        <p className="terms-text">
                             * By clicking "Confirm Booking", you agree to our terms of service. We will review your request and contact you to finalize the details.
                         </p>
 
                         <button
-                            onClick={currentUser ? handleCheckout : undefined} // If logged in, click triggers. If guest, form submit triggers.
-                            form={currentUser ? undefined : "booking-form"} // Link to form if guest
+                            onClick={currentUser ? handleCheckout : () => navigate('/login?redirect=/booking')}
+                            form={currentUser ? "booking-form" : undefined}
                             type="submit"
-                            disabled={isSubmitting}
-                            style={{
-                                width: '100%',
-                                padding: '1.2rem',
-                                backgroundColor: '#c5a059',
-                                color: '#fff',
-                                border: 'none',
-                                borderRadius: '4px',
-                                fontSize: '1rem',
-                                fontWeight: 'bold',
-                                cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                                letterSpacing: '1px',
-                                transition: 'background 0.3s'
-                            }}
+                            disabled={isSubmitting} // Always enabled if not logged in so they can click to login
+                            className="confirm-btn"
                         >
-                            {isSubmitting ? 'Processing...' : 'CONFIRM BOOKING'}
+                            {isSubmitting ? 'Processing...' : (currentUser ? 'CONFIRM BOOKING' : 'LOGIN TO BOOK')}
                         </button>
                     </div>
                 </div>

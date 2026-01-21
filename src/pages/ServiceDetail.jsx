@@ -159,6 +159,30 @@ function ServiceDetail() {
                             Add to Booking
                         </button>
                     </div>
+
+                    {(pkg.paymentInfo || pkg.contactInfo) && (
+                        <div className="info-card" style={{ marginTop: '2rem', padding: '1.5rem', background: '#f5f5f5', borderRadius: '12px' }}>
+                            {pkg.paymentInfo && (
+                                <div className="payment-info" style={{ marginBottom: '1.5rem' }}>
+                                    <h4 style={{ marginBottom: '0.5rem' }}>Payment Info</h4>
+                                    <p style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>• {pkg.paymentInfo.deposit}</p>
+                                    <p style={{ fontSize: '0.9rem' }}>• {pkg.paymentInfo.balance}</p>
+                                </div>
+                            )}
+
+                            {pkg.contactInfo && (
+                                <div className="contact-info">
+                                    <h4 style={{ marginBottom: '0.5rem' }}>Contact Us</h4>
+                                    <p style={{ fontSize: '0.9rem', marginBottom: '0.25rem' }}><strong>Tel:</strong> {pkg.contactInfo.phone}</p>
+                                    <p style={{ fontSize: '0.9rem', marginBottom: '0.25rem' }}><strong>Email:</strong> {pkg.contactInfo.email}</p>
+                                    <div style={{ marginTop: '0.5rem' }}>
+                                        <p style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>Socials:</p>
+                                        <p style={{ fontSize: '0.85rem', color: '#666' }}>{pkg.contactInfo.socials}</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </aside>
             </div>
         </div>
