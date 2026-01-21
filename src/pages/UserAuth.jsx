@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import './UserAuth.css';
 
 function UserAuth() {
     const [isLogin, setIsLogin] = useState(true);
@@ -27,104 +28,72 @@ function UserAuth() {
             }
             navigate(redirectPath);
         } catch (err) {
-            setError('Failed to ' + (isLogin ? 'log in' : 'sign up') + ': ' + err.message);
+            let message = err.message;
+            if (message.includes('auth/invalid-credential')) message = 'Invalid email or password.';
+            if (message.includes('auth/email-already-in-use')) message = 'This email is already registered.';
+            if (message.includes('auth/weak-password')) message = 'Password should be at least 6 characters.';
+            setError(message);
         }
     };
 
     return (
-        <div style={{
-            minHeight: '80vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#f9f9f9'
-        }}>
-            <div style={{
-                width: '100%',
-                maxWidth: '400px',
-                padding: '2rem',
-                backgroundColor: '#fff',
-                borderRadius: '8px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-            }}>
-                <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <div className="auth-container">
+            <div className="auth-card">
+                <h2 className="auth-title">
                     {isLogin ? 'Welcome Back' : 'Create Account'}
                 </h2>
 
-                {error && <div style={{
-                    padding: '0.8rem',
-                    backgroundColor: '#ffebee',
-                    color: '#c62828',
-                    borderRadius: '4px',
-                    marginBottom: '1rem',
-                    fontSize: '0.9rem'
-                }}>{error}</div>}
+                {error && <div className="auth-error">{error}</div>}
 
                 <form onSubmit={handleSubmit}>
                     {!isLogin && (
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Full Name</label>
+                        <div className="form-group">
+                            <label className="form-label">Full Name</label>
                             <input
+                                className="form-input"
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 required
-                                style={{ width: '100%', padding: '0.8rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                                placeholder="Enter your full name"
                             />
                         </div>
                     )}
 
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Email</label>
+                    <div className="form-group">
+                        <label className="form-label">Email Address</label>
                         <input
+                            className="form-input"
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            style={{ width: '100%', padding: '0.8rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                            placeholder="name@example.com"
                         />
                     </div>
 
-                    <div style={{ marginBottom: '1.5rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Password</label>
+                    <div className="form-group">
+                        <label className="form-label">Password</label>
                         <input
+                            className="form-input"
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            style={{ width: '100%', padding: '0.8rem', border: '1px solid #ddd', borderRadius: '4px' }}
+                            placeholder="Enter your password"
                         />
                     </div>
 
-                    <button
-                        type="submit"
-                        style={{
-                            width: '100%',
-                            padding: '1rem',
-                            backgroundColor: '#000',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '4px',
-                            fontWeight: 'bold',
-                            cursor: 'pointer'
-                        }}
-                    >
+                    <button type="submit" className="submit-btn">
                         {isLogin ? 'Log In' : 'Sign Up'}
                     </button>
                 </form>
 
-                <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.9rem' }}>
+                <div className="toggle-text">
                     {isLogin ? "Don't have an account? " : "Already have an account? "}
                     <button
                         onClick={() => setIsLogin(!isLogin)}
-                        style={{
-                            background: 'none',
-                            border: 'none',
-                            color: '#000',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            textDecoration: 'underline'
-                        }}
+                        className="toggle-btn"
                     >
                         {isLogin ? 'Sign Up' : 'Log In'}
                     </button>
