@@ -5,48 +5,93 @@ export const PACKAGES = [
         description: 'Capture every moment of your special day with our professional photography services.',
         image: '/Studio Pictures/054A6395.jpg',
         imagePosition: 'top center',
+        paymentInfo: {
+            deposit: '15% Deposit to secure a date, not refundable',
+            balance: 'Balance to be paid in full on or before the event'
+        },
+        contactInfo: {
+            phone: '+353899882998',
+            email: 'smiledefinitionpro@gmail.com',
+            socials: '@smiledefinitionimage, @smileimage, @smile360defintion'
+        },
         tiers: [
             {
-                id: 'silver',
-                name: 'Silver Package',
+                id: 'silver-white',
+                name: 'Silver - White Wedding',
+                price: 900,
+                features: [
+                    'White Wedding Coverage'
+                ]
+            },
+            {
+                id: 'gold-white-photobook',
+                name: 'Gold - White Wedding + Photobook',
                 price: 1500,
                 features: [
-                    '6 Hours Coverage',
-                    '1 Photographer',
-                    '300+ Edited High-Res Images',
-                    'Online Gallery'
+                    'White Wedding Coverage',
+                    'Photobook'
                 ]
             },
             {
-                id: 'gold',
-                name: 'Gold Package',
+                id: 'platinum-white-pre-photo',
+                name: 'Platinum - White Wedding + Pre-Wedding + Photobook',
+                price: 1800,
+                features: [
+                    'White Wedding Coverage',
+                    'Pre-Wedding Session',
+                    'Photobook'
+                ]
+            },
+            {
+                id: 'trad-white',
+                name: 'Traditional & White Wedding',
+                price: 1850,
+                features: [
+                    'Two Days Event',
+                    'Traditional Wedding Coverage',
+                    'White Wedding Coverage'
+                ]
+            },
+            {
+                id: 'trad-white-pre',
+                name: 'Traditional & White Wedding + Pre-Wedding',
                 price: 2200,
                 features: [
-                    '8 Hours Coverage',
-                    '2 Photographers',
-                    '500+ Edited High-Res Images',
-                    'Online Gallery',
-                    'Engagement Session'
+                    'Two Days Event',
+                    'Traditional Wedding Coverage',
+                    'White Wedding Coverage',
+                    'Pre-Wedding Session'
                 ]
             },
             {
-                id: 'platinum',
-                name: 'Platinum Package',
-                price: 3000,
+                id: 'trad-white-pre-photo',
+                name: 'Trad & White + Pre-Wedding + Photobook',
+                price: 2450,
                 features: [
-                    'Full Day Coverage (up to 12 hours)',
-                    '2 Photographers',
-                    '800+ Edited High-Res Images',
-                    'Online Gallery',
-                    'Engagement Session',
-                    'Premium Photo Album'
+                    'Two Days Event',
+                    'Traditional Wedding Coverage',
+                    'White Wedding Coverage',
+                    'Pre-Wedding Session',
+                    'Photobook'
+                ]
+            },
+            {
+                id: 'trad-white-photo',
+                name: 'Traditional & White Wedding + Photobook',
+                price: 2800,
+                features: [
+                    'Two Days Event',
+                    'Traditional Wedding Coverage',
+                    'White Wedding Coverage',
+                    'Photobook'
                 ]
             }
         ],
         addons: [
-            { id: 'extra-hour', name: 'Extra Hour', price: 200 },
-            { id: 'album', name: 'Additional Album', price: 400 },
-            { id: 'prints', name: 'Print Box', price: 150 }
+            { id: 'pre-wedding', name: 'Pre-Wedding Picture', price: 300 },
+            { id: 'photobook', name: 'Photobook', price: 330 },
+            { id: 'live-zoom', name: 'Live Zoom', price: 300 },
+            { id: '360-photobooth', name: '360 Photobooth', price: 500 }
         ]
     },
     {
