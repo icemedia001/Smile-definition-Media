@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '../context/StoreContext';
 import { useGallery } from '../context/GalleryContext';
 import { useBooking } from '../context/BookingContext';
@@ -10,8 +10,27 @@ import './Admin.css';
 
 function Admin() {
     const { addProduct, products } = useStore();
-    const { fetchAllBookings } = useBooking();
     const [bookings, setBookings] = useState([]);
+
+    const loadBookings = async () => {
+        const all = await fetchAllBookings();
+        setBookings(all);
+    };
+
+    // Load bookings when view changes to bookings or on initial auth
+    useEffect(() => {
+        if (isAuthenticated) {
+            loadBookings();
+        }
+    }, [isAuthenticated, activeView]);
+
+    const handleUpdateStatus = async (id, status, reason = '') => {
+        if (confirm(`Are you sure you want to ${status} this booking?`)) {
+            await updateBookingStatus(id, status, reason);
+            alert(`Booking ${status}!`);
+            loadBookings(); // Refresh list
+        }
+    };
     const {
         galleries,
         createGallery,
@@ -42,12 +61,23 @@ function Admin() {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            await signInWithEmailAndPassword(auth, email, password);
-            setIsAuthenticated(true);
-            localStorage.setItem('adminAuth', 'true');
-            // Fetch bookings on login
-            const allBookings = await fetchAllBookings();
-            setBookings(allBookings);
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            // Security Check: Only allow specific admin email
+            // In a production app, use Custom Claims or a Firestore 'admins' collection
+            const ADMIN_EMAILS = ['smiledefinitionpro@gmail.com', 'admin@smiledefinition.com', 'teniopemipo@gmail.com']; // Add user's email if testing
+
+            if (ADMIN_EMAILS.includes(user.email)) {
+                setIsAuthenticated(true);
+                localStorage.setItem('adminAuth', 'true');
+                // Fetch bookings on login
+                const allBookings = await fetchAllBookings();
+                setBookings(allBookings);
+            } else {
+                alert('Access Denied: You do not have administrator privileges.');
+                await auth.signOut(); // Log them out immediately
+            }
         } catch (error) {
             console.error("Login Error:", error);
             alert('Incorrect email or password');
@@ -346,21 +376,55 @@ function Admin() {
                                         <div>
                                             <h3 style={{ margin: 0 }}>{booking.userName}</h3>
                                             <p style={{ color: '#666', margin: 0 }}>{booking.userEmail}</p>
+                                            {booking.userPhone && <p style={{ color: '#666', margin: '0.2rem 0 0 0', fontSize: '0.9rem' }}>📞 {booking.userPhone}</p>}
                                         </div>
                                         <div style={{ textAlign: 'right' }}>
                                             <span style={{
                                                 padding: '0.3rem 0.8rem',
                                                 borderRadius: '20px',
-                                                backgroundColor: booking.status === 'confirmed' ? '#e8f5e9' : '#fff3e0',
-                                                color: booking.status === 'confirmed' ? '#2e7d32' : '#ef6c00',
+                                                backgroundColor: booking.status === 'confirmed' ? '#e8f5e9' : (booking.status === 'rejected' ? '#ffebee' : '#fff3e0'),
+                                                color: booking.status === 'confirmed' ? '#2e7d32' : (booking.status === 'rejected' ? '#c62828' : '#ef6c00'),
                                                 fontSize: '0.9rem',
-                                                fontWeight: 'bold'
+                                                fontWeight: 'bold',
+                                                display: 'inline-block',
+                                                marginBottom: '0.5rem'
                                             }}>
                                                 {booking.status.toUpperCase()}
                                             </span>
+
+                                            {booking.status === 'pending' && (
+                                                <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                                    <button
+                                                        onClick={() => handleUpdateStatus(booking.id, 'confirmed')}
+                                                        style={{ background: '#2e7d32', color: 'white', border: 'none', padding: '0.3rem 0.8rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
+                                                    >
+                                                        Accept
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            const reason = prompt("Enter reason for rejection:");
+                                                            if (reason) handleUpdateStatus(booking.id, 'rejected', reason);
+                                                        }}
+                                                        style={{ background: '#c62828', color: 'white', border: 'none', padding: '0.3rem 0.8rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                </div>
+                                            )}
+
                                             <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: '#888' }}>
-                                                {new Date(booking.createdAt?.seconds * 1000).toLocaleDateString()}
+                                                Booked: {new Date(booking.createdAt?.seconds * 1000).toLocaleDateString()}
                                             </p>
+                                            {booking.eventDate && (
+                                                <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.95rem', fontWeight: 'bold', color: '#333' }}>
+                                                    Event: {new Date(booking.eventDate).toLocaleDateString()}
+                                                </p>
+                                            )}
+                                            {booking.rejectionReason && (
+                                                <p style={{ color: '#c62828', fontSize: '0.9rem', marginTop: '0.5rem', fontStyle: 'italic' }}>
+                                                    Reason: "{booking.rejectionReason}"
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
 
