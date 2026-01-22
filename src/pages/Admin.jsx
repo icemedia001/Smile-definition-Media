@@ -10,7 +10,26 @@ import './Admin.css';
 
 function Admin() {
     const { addProduct, products } = useStore();
+    const { fetchAllBookings, updateBookingStatus } = useBooking();
+
+    // State Declarations (Must be before effects)
     const [bookings, setBookings] = useState([]);
+    const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem('adminAuth') === 'true');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [activeView, setActiveView] = useState('galleries');
+    const [selectedGallery, setSelectedGallery] = useState(null);
+    const [activeTab, setActiveTab] = useState('photos');
+    const [previewImage, setPreviewImage] = useState(null);
+
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [newClientName, setNewClientName] = useState('');
+    const [newClientEmail, setNewClientEmail] = useState('');
+    const [createdClientCreds, setCreatedClientCreds] = useState(null);
+
+    const [newListData, setNewListData] = useState({ name: '', limit: 50 });
+
+    const [isUploading, setIsUploading] = useState(false);
 
     const loadBookings = async () => {
         const all = await fetchAllBookings();
@@ -31,6 +50,7 @@ function Admin() {
             loadBookings(); // Refresh list
         }
     };
+
     const {
         galleries,
         createGallery,
@@ -41,22 +61,6 @@ function Admin() {
         addFavoriteList
     } = useGallery();
 
-    const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem('adminAuth') === 'true');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [activeView, setActiveView] = useState('galleries');
-    const [selectedGallery, setSelectedGallery] = useState(null);
-    const [activeTab, setActiveTab] = useState('photos');
-    const [previewImage, setPreviewImage] = useState(null);
-
-    const [showCreateModal, setShowCreateModal] = useState(false);
-    const [newClientName, setNewClientName] = useState('');
-    const [newClientEmail, setNewClientEmail] = useState('');
-    const [createdClientCreds, setCreatedClientCreds] = useState(null);
-
-    const [newListData, setNewListData] = useState({ name: '', limit: 50 });
-
-    const [isUploading, setIsUploading] = useState(false);
 
     const handleLogin = async (e) => {
         e.preventDefault();
