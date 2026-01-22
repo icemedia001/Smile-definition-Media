@@ -22,6 +22,17 @@ function Portfolio() {
             setScrolled(window.scrollY > 50);
         };
         window.addEventListener('scroll', handleScroll);
+
+        // Handle initial hash scrolling
+        if (window.location.hash) {
+            const element = document.querySelector(window.location.hash);
+            if (element) {
+                setTimeout(() => {
+                    element.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+            }
+        }
+
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
